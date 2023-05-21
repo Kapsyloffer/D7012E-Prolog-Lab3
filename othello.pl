@@ -3,8 +3,8 @@
 %    D7012E Declarative languages
 %    Luleå University of Technology
 %
-%    Student full name: <TO BE FILLED IN BEFORE THE GRADING> 
-%    Student user id  : <TO BE FILLED IN BEFORE THE GRADING> 
+%    Student full name: Christoffer Lindkvist 
+%    Student user id  : icoili-9
 %
 /* ------------------------------------------------------- */
 
@@ -68,10 +68,10 @@
 
 initBoard([ [.,.,.,.,.,.], 
             [.,.,.,.,.,.],
-	    [.,.,1,2,.,.], 
-	    [.,.,2,1,.,.], 
+	    	[.,.,1,2,.,.], 
+	    	[.,.,2,1,.,.], 
             [.,.,.,.,.,.], 
-	    [.,.,.,.,.,.] ]).
+	    	[.,.,.,.,.,.] ]).
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
 %
