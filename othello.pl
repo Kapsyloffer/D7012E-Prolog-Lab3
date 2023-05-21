@@ -29,13 +29,13 @@
 %       the file  ttt.pl  to see how the implementations is
 %       done for game tic-tac-toe.
 %
-%          * initialize(InitialState,InitialPlyr).
-%          * winner(State,Plyr) 
+%          * initialize(InitialState,InitialPlayer).
+%          * winner(State,Player) 
 %          * tie(State)
 %          * terminal(State) 
-%          * moves(Plyr,State,MvList)
-%          * nextState(Plyr,Move,State,NewState,NextPlyr)
-%          * validmove(Plyr,State,Proposed)
+%          * moves(Player,State,MoveList)
+%          * nextState(Player,Move,State,NewState,NextPlayer)
+%          * validmove(Player,State,Proposed)
 %          * h(State,Val)  (see question 2 in the handout)
 %          * lowerBound(B)
 %          * upperBound(B)
@@ -76,24 +76,28 @@ initBoard([ [.,.,.,.,.,.],
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
 %
 %%%%%%%%%%%%%%%%%% IMPLEMENT: initialize(...)%%%%%%%%%%%%%%%%%%%%%
-%%% Using initBoard define initialize(InitialState,InitialPlyr). 
+%%% Using initBoard define initialize(InitialState,InitialPlayer). 
 %%%  holds iff InitialState is the initial state and 
-%%%  InitialPlyr is the player who moves first. 
+%%%  InitialPlayer is the player who moves first. 
 
-
-
+initialize(InitialState, InitialPlayer):-
+	initBoard(InitialState).
 
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%winner(...)%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
-%% define winner(State,Plyr) here.  
+%% define winner(State,Player) here.  
 %     - returns winning player if State is a terminal position and
-%     Plyr has a higher score than the other player 
+%     Player has a higher score than the other player 
 
+winner(State,Player):-
+	todo.
 
-
+%To count and keep track of scores.
+score(State, Player, Result):-
+	todo.
 
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
@@ -103,9 +107,11 @@ initBoard([ [.,.,.,.,.,.],
 %% define tie(State) here. 
 %    - true if terminal State is a "tie" (no winner) 
 
-
-
-
+tie(State):-
+	terminal(State),
+	score(State, 1, Player1),
+	score(State, 2, Player2),
+	Player1 = Player2.
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
 %
@@ -114,8 +120,8 @@ initBoard([ [.,.,.,.,.,.],
 %% define terminal(State). 
 %   - true if State is a terminal   
 
-
-
+terminal(State):-
+	todo.
 
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
@@ -141,37 +147,38 @@ printList([H | L]) :-
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
 %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%moves(Plyr,State,MvList)%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%moves(Player,State,MoveList)%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 
-%% define moves(Plyr,State,MvList). 
-%   - returns list MvList of all legal moves Plyr can make in State
+%% define moves(Player,State,MoveList). 
+%   - returns list MoveList of all legal moves Player can make in State
 %
 
-
-
+moves(Player, State, MoveList):-
+	todo.
 
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
 %
-%%%%%%%%%%%%%%nextState(Plyr,Move,State,NewState,NextPlyr)%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%nextState(Player,Move,State,NewState,NextPlayer)%%%%%%%%%%%%%%%%%%%%
 %% 
-%% define nextState(Plyr,Move,State,NewState,NextPlyr). 
-%   - given that Plyr makes Move in State, it determines NewState (i.e. the next 
+%% define nextState(Player,Move,State,NewState,NextPlayer). 
+%   - given that Player makes Move in State, it determines NewState (i.e. the next 
 %     state) and NextPlayer (i.e. the next player who will move).
 %
 
-
-
+nextState(Player, Move, State, NewState, NextPlayer):-
+	todo.
 
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
 %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%validmove(Plyr,State,Proposed)%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%validmove(Player,State,Proposed)%%%%%%%%%%%%%%%%%%%%
 %% 
-%% define validmove(Plyr,State,Proposed). 
-%   - true if Proposed move by Plyr is valid at State.
+%% define validmove(Player,State,Proposed). 
+%   - true if Proposed move by Player is valid at State.
 
-
+validmove(Player, State, Proposed):-
+	todo.
 
 
 
@@ -187,7 +194,8 @@ printList([H | L]) :-
 %          the value of state (see handout on ideas about
 %          good heuristics.
 
-
+h(State,Val):-
+	todo.
 
 
 
@@ -199,8 +207,8 @@ printList([H | L]) :-
 %   - returns a value B that is less than the actual or heuristic value
 %     of all states.
 
-
-
+lowerBound(B):-
+	todo.
 
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
@@ -211,7 +219,8 @@ printList([H | L]) :-
 %   - returns a value B that is greater than the actual or heuristic value
 %     of all states.
 
-
+upperBound(B):-
+	todo.
 
 
 
@@ -314,3 +323,5 @@ setInList( [Element|RestList], [Element|NewRestList], Index, Value) :-
 	Index1 is Index-1, 
 	setInList( RestList, NewRestList, Index1, Value). 
  
+
+todo.
