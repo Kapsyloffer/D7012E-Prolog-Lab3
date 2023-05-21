@@ -92,12 +92,31 @@ initialize(InitialState, InitialPlayer):-
 %     - returns winning player if State is a terminal position and
 %     Player has a higher score than the other player 
 
-winner(State,Player):-
-	todo.
+winner(State, Player):-
+	countScore(State, P1, P2),
+    compare_scores(P1, P2, Player).
+
+compare_scores(P1, P2, Player) :-
+    (
+		P1 < P2 -> Player = 2 ;
+     	P1 > P2 -> Player = 1 ;
+     	Player = 0
+	 ).
+
 
 %To count and keep track of scores.
-score(State, Player, Result):-
-	todo.
+countScore([], 0, 0).
+
+countScore([1|T], Player1Score, Player2Score):-
+	countScore(T, RestPlayer1Score, Player2Score),
+	Player1Score is RestPlayer1Score + 1.
+
+countScore([2|T], Player1Score, Player2Score):-
+	countScore(T, Player1Score, RestPlayer2Score),
+	Player2Score is RestPlayer2Score + 1.
+
+countScore([_|T], Player1Score, Player2Score):-
+	countScore(T, Player1Score, Player2Score).
 
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
@@ -109,8 +128,7 @@ score(State, Player, Result):-
 
 tie(State):-
 	terminal(State),
-	score(State, 1, Player1),
-	score(State, 2, Player2),
+	score(State, Player1, Player2),
 	Player1 = Player2.
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
@@ -324,4 +342,8 @@ setInList( [Element|RestList], [Element|NewRestList], Index, Value) :-
 	setInList( RestList, NewRestList, Index1, Value). 
  
 
-todo.
+todo:-
+	!.
+
+unit_tests:-
+countScore([1,1,1,2,2,2,3,2,0,0,0], Player1, Player2).
