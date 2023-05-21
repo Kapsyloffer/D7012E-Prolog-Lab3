@@ -29,16 +29,16 @@
 %       the file  ttt.pl  to see how the implementations is
 %       done for game tic-tac-toe.
 %
-%          * initialize(InitialState,InitialPlayer).
-%          * winner(State,Player) 
-%          * tie(State)
+%          ✅ initialize(InitialState,InitialPlayer).
+%          ✅ winner(State,Player) 
+%          ✅ tie(State)
 %          * terminal(State) 
 %          * moves(Player,State,MoveList)
 %          * nextState(Player,Move,State,NewState,NextPlayer)
-%          * validmove(Player,State,Proposed)
+%          ✅ validmove(Player,State,Proposed)
 %          * h(State,Val)  (see question 2 in the handout)
-%          * lowerBound(B)
-%          * upperBound(B)
+%          ✅ lowerBound(B)
+%          ✅ upperBound(B)
 % /* ------------------------------------------------------ */
 
 
@@ -93,14 +93,15 @@ initialize(InitialState, InitialPlayer):-
 %     Player has a higher score than the other player 
 
 winner(State, Player):-
+	terminal(State),
 	countScore(State, P1, P2),
-    compare_scores(P1, P2, Player).
+    compare_scores(State, P1, P2, Player).
 
-compare_scores(P1, P2, Player) :-
+compare_scores(State, P1, P2, Player) :-
     (
 		P1 < P2 -> Player = 2 ;
      	P1 > P2 -> Player = 1 ;
-     	Player = 0
+		tie(State) %Om de är lika skickar vi de till tie hell.
 	 ).
 
 
@@ -128,7 +129,7 @@ countScore([_|T], Player1Score, Player2Score):-
 
 tie(State):-
 	terminal(State),
-	score(State, Player1, Player2),
+	countScore(State, Player1, Player2),
 	Player1 = Player2.
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
@@ -139,7 +140,10 @@ tie(State):-
 %   - true if State is a terminal   
 
 terminal(State):-
-	todo.
+	moves(1, State, Player1Moves),
+	moves(2, State, Player2Moves),
+	Player1Moves == [],
+	Player2Moves == [].
 
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
@@ -172,7 +176,26 @@ printList([H | L]) :-
 %
 
 moves(Player, State, MoveList):-
-	todo.
+    findall(Move, movesN(Player, State, Move), N),
+    findall(Move, movesW(Player, State, Move), W),
+    findall(Move, movesS(Player, State, Move), S),
+    findall(Move, movesE(Player, State, Move), E),
+    findall(Move, movesNW(Player, State, Move), NW),
+    findall(Move, movesSW(Player, State, Move), SW),
+    findall(Move, movesNE(Player, State, Move), NE),
+    findall(Move, movesSE(Player, State, Move), SE),
+    append([N, W, S, E, NW, SW, NE, SE], MoveList).
+
+movesN(_, _, _).
+movesW(_, _, _).
+movesS(_, _, _).
+movesE(_, _, _).
+movesNE(_, _, _).
+movesNW(_, _, _).
+movesSW(_, _, _).
+movesSE(_, _, _).
+
+%opponent = player % 2 + 1
 
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
@@ -196,8 +219,8 @@ nextState(Player, Move, State, NewState, NextPlayer):-
 %   - true if Proposed move by Player is valid at State.
 
 validmove(Player, State, Proposed):-
-	todo.
-
+	moves(Player, State, MoveList),
+	member(Proposed, MoveList).
 
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
@@ -225,8 +248,7 @@ h(State,Val):-
 %   - returns a value B that is less than the actual or heuristic value
 %     of all states.
 
-lowerBound(B):-
-	todo.
+lowerBound(-1000).
 
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
@@ -237,8 +259,7 @@ lowerBound(B):-
 %   - returns a value B that is greater than the actual or heuristic value
 %     of all states.
 
-upperBound(B):-
-	todo.
+upperBound(1000).
 
 
 
