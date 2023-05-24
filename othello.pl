@@ -12,7 +12,7 @@
 
 %do not chagne the follwoing line!
 :- ensure_loaded('play.pl').
-
+:- ensure_loaded('stupid.pl'). 
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
 %
@@ -32,11 +32,11 @@
 %          ✅ initialize(InitialState,InitialPlayer).
 %          ✅ winner(State,Player) 
 %          ✅ tie(State)
-%          * terminal(State) 
+%          ✅ terminal(State) 
 %          * moves(Player,State,MoveList)
 %          * nextState(Player,Move,State,NewState,NextPlayer)
 %          ✅ validmove(Player,State,Proposed)
-%          * h(State,Val)  (see question 2 in the handout)
+%          ✅ h(State,Val)  (see question 2 in the handout)
 %          ✅ lowerBound(B)
 %          ✅ upperBound(B)
 % /* ------------------------------------------------------ */
@@ -175,26 +175,19 @@ printList([H | L]) :-
 %   - returns list MoveList of all legal moves Player can make in State
 %
 
+%moves i tuples
 moves(Player, State, MoveList):-
-    findall(Move, movesN(Player, State, Move), N),
-    findall(Move, movesW(Player, State, Move), W),
-    findall(Move, movesS(Player, State, Move), S),
-    findall(Move, movesE(Player, State, Move), E),
-    findall(Move, movesNW(Player, State, Move), NW),
-    findall(Move, movesSW(Player, State, Move), SW),
-    findall(Move, movesNE(Player, State, Move), NE),
-    findall(Move, movesSE(Player, State, Move), SE),
+    findall(Move, check_move(Player, State, Move), N),
+    findall(Move, check_move(Player, State, Move), W),
+    findall(Move, check_move(Player, State, Move), S),
+    findall(Move, check_move(Player, State, Move), E),
+    findall(Move, check_move(Player, State, Move), NW),
+    findall(Move, check_move(Player, State, Move), SW),
+    findall(Move, check_move(Player, State, Move), NE),
+    findall(Move, check_move(Player, State, Move), SE),
     append([N, W, S, E, NW, SW, NE, SE], MoveList).
 
-movesN(_, _, _).
-movesW(_, _, _).
-movesS(_, _, _).
-movesE(_, _, _).
-movesNE(_, _, _).
-movesNW(_, _, _).
-movesSW(_, _, _).
-movesSE(_, _, _).
-
+check_move(_,_,_).
 %opponent = player % 2 + 1
 
 
@@ -208,7 +201,11 @@ movesSE(_, _, _).
 %
 
 nextState(Player, Move, State, NewState, NextPlayer):-
-	todo.
+	opponent(Player, NextPlayer).
+
+opponent(Player, Opponent):-
+	Opponent is (Player mod 2) + 1.
+
 
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
@@ -235,8 +232,13 @@ validmove(Player, State, Proposed):-
 %          the value of state (see handout on ideas about
 %          good heuristics.
 
-h(State,Val):-
-	todo.
+h(_,0).
+h(State, -100):- winner(State, 1), !.
+h(State, 100) :- winner(State, 2), !.
+h(State, 0) :- tie(State), !.
+h(State, Val) :-
+	countScore(State, P1, P2),
+	Val is P2 - P1.
 
 
 
@@ -248,7 +250,7 @@ h(State,Val):-
 %   - returns a value B that is less than the actual or heuristic value
 %     of all states.
 
-lowerBound(-1000).
+lowerBound(-101).
 
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
@@ -259,7 +261,7 @@ lowerBound(-1000).
 %   - returns a value B that is greater than the actual or heuristic value
 %     of all states.
 
-upperBound(1000).
+upperBound(101).
 
 
 
