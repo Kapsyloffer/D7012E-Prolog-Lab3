@@ -99,8 +99,8 @@ winner(State, Player):-
 
 compare_scores(State, P1, P2, Player) :-
     (
-		P1 < P2 -> Player = 2 ;
-     	P1 > P2 -> Player = 1 ;
+		P1 > P2 -> Player = 2 ;
+     	P1 < P2 -> Player = 1 ;
 		tie(State) %Om de är lika skickar vi de till tie hell.
 	 ).
 
@@ -177,17 +177,46 @@ printList([H | L]) :-
 
 %moves i tuples
 moves(Player, State, MoveList):-
-    findall(Move, check_move(Player, State, Move), N),
-    findall(Move, check_move(Player, State, Move), W),
-    findall(Move, check_move(Player, State, Move), S),
-    findall(Move, check_move(Player, State, Move), E),
-    findall(Move, check_move(Player, State, Move), NW),
-    findall(Move, check_move(Player, State, Move), SW),
-    findall(Move, check_move(Player, State, Move), NE),
-    findall(Move, check_move(Player, State, Move), SE),
+    findall(Move, check_move(Player, State, north, Move), N),
+    findall(Move, check_move(Player, State, west, Move), W),
+    findall(Move, check_move(Player, State, south, Move), S),
+    findall(Move, check_move(Player, State, east, Move), E),
+    findall(Move, check_move(Player, State, nWest, Move), NW),
+    findall(Move, check_move(Player, State, sWest, Move), SW),
+    findall(Move, check_move(Player, State, nEast, Move), NE),
+    findall(Move, check_move(Player, State, sEast, Move), SE),
     append([N, W, S, E, NW, SW, NE, SE], MoveList).
 
-check_move(_,_,_).
+check_move(_,_,_,_).
+
+check_move(Player, State, north, Move):-
+	get(State, [X, Y], Player),
+    NewY is Y - 1,
+    get(State, [X, NewY], Opp),
+    \+ Opp = Player,
+    Move = [X, NewY].
+
+check_move(Player, State, west, Move):-
+	todo.
+
+check_move(Player, State, south, Move):-
+	todo.
+
+check_move(Player, State, east, Move):-
+	todo.
+
+check_move(Player, State, nWest, Move):-
+	todo.
+
+check_move(Player, State, sWest, Move):-
+	todo.
+
+check_move(Player, State, nEast, Move):-
+	todo.
+
+check_move(Player, State, sEast, Move):-
+	todo.
+																																		
 %opponent = player % 2 + 1
 
 
