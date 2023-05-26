@@ -33,8 +33,8 @@
 %          ✅ winner(State,Player) 
 %          ✅ tie(State)
 %          ✅ terminal(State) 
-%          * moves(Player,State,MoveList)
-%          * nextState(Player,Move,State,NewState,NextPlayer)
+%          ✅ moves(Player,State,MoveList)
+%          ✅ nextState(Player,Move,State,NewState,NextPlayer)
 %          ✅ validmove(Player,State,Proposed)
 %          ✅ h(State,Val)  (see question 2 in the handout)
 %          ✅ lowerBound(B)
@@ -99,10 +99,10 @@ winner(State, Player):-
 
 compare_scores(State, P1, P2, Player) :-
     (
-		P1 > P2 -> Player = 2 ;
-     	P1 < P2 -> Player = 1 ;
+		P1 < P2 -> Player = 2 ;
+     	P1 > P2 -> Player = 1 ;
 		tie(State) %Om de är lika skickar vi de till tie hell.
-	 ).
+	 ), !.
 
 
 %To count and keep track of scores.
@@ -130,7 +130,7 @@ countScore([_|T], Player1Score, Player2Score):-
 tie(State):-
 	terminal(State),
 	countScore(State, Player1, Player2),
-	Player1 = Player2.
+	Player1 = Player2, !.
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
 %
@@ -174,67 +174,138 @@ printList([H | L]) :-
 %% define moves(Player,State,MoveList). 
 %   - returns list MoveList of all legal moves Player can make in State
 %
+moves(Player, State,MoveList) :-
+	pieces(State, Player, Pieces),
+	moves(Player, State, Pieces, UnsortedMoveList),
+	(UnsortedMoveList = [] 
+	->
+		MoveList = [n]
+	;
+		sort(UnsortedMoveList,MoveList)
+	).
 
-%moves i tuples
-moves(Player, State, MoveList):-
-    findall(Move, check_move(Player, State, north, Move), N),
-    findall(Move, check_move(Player, State, west, Move), W),
-    findall(Move, check_move(Player, State, south, Move), S),
-    findall(Move, check_move(Player, State, east, Move), E),
-    findall(Move, check_move(Player, State, nWest, Move), NW),
-    findall(Move, check_move(Player, State, sWest, Move), SW),
-    findall(Move, check_move(Player, State, nEast, Move), NE),
-    findall(Move, check_move(Player, State, sEast, Move), SE),
-    append([N, W, S, E, NW, SW, NE, SE], MoveList).
+moves(Player, State, [Coord|Tail],MoveList) :-
+	Opp is (Player mod 2) + 1,
+	moves(Player, State, Tail, NextMoves), !,
+	(findMoves(State, Player, Opp, Coord,Moves) 
+	->
+		append(Moves, NextMoves,MoveList) %Moves
+	;
+		MoveList = NextMoves %No moves
+	). 
 
-check_move(_,_,_,_).
 
-check_move(Player, State, north, Move):-
-	get(State, [X, Y], Player),
-    NewY is Y - 1,
-    get(State, [X, NewY], Opp),
-    \+ Opp = Player,
-    Move = [X, NewY].
+moves(_, _, [], []).
 
-check_move(Player, State, west, Move):-
-	todo.
+findMoves(State, Player, Opp, Coord, Moves) :-
+	findMoves(State, Player, Opp, Coord, Moves,
+	[north, south, east, west, nWest, nEast, sWest, sEast]).
 
-check_move(Player, State, south, Move):-
-	todo.
+findMoves(State, Player, Opp, Coord,Moves, [Direction|Tail]) :-
+	findMoves(State, Player, Opp, Coord, NextMoves, Tail),
+	(findMove(State, Player, Opp, Coord, Direction, Player,Move) 
+	->
+		Moves = [Move|NextMoves] % Found move, add to list.
+	;
+		Moves = NextMoves % No move.
+	). 
+findMoves(_, _, _, _, [], []).
 
-check_move(Player, State, east, Move):-
-	todo.
+%Here we find each legal move n each direction,
+findMove(State, Player, Opp, [X, Y], Direction, Prev,Move) :-
+	fetchCoord([X, Y], Direction, [Xi, Y1]),
+	get(State, [Xi, Y1], Tile),
+	\+(Tile = Player),
+	(
+		Tile = Opp, 
+		findMove(State, Player, Opp, [Xi, Y1], Direction, Opp,Move)
+		
+	;
+		Tile = ., 
+		Prev = Opp,
+		Move = [Xi, Y1]
+	).
 
-check_move(Player, State, nWest, Move):-
-	todo.
+makeMove(State, Player, Move, NewState) :-
+	Opp is (Player mod 2) + 1,
+	set(State, S, Move, Player),
+	makeMove(S, Player, Opp, Move,
+	[north, south, east, west, nWest, nEast, sWest, sEast], NewState).
+makeMove(State, Player, Opp, Move, [Direction|Tail], NewState) :-
+	(flipTiles(State, Player, Opp, Move, Direction, FlippedState) ->
+		S = FlippedState % Update state.
+	;
+		S = State % Keep old state, none are flipped.
+	),
+	makeMove(S, Player, Opp, Move, Tail, NewState).
+makeMove(State, _, _, _, [], State).
 
-check_move(Player, State, sWest, Move):-
-	todo.
 
-check_move(Player, State, nEast, Move):-
-	todo.
+pieces(State, Player, Pieces) :- pieces(State, Player, Pieces, 0, 0).
 
-check_move(Player, State, sEast, Move):-
-	todo.
-																																		
-%opponent = player % 2 + 1
+pieces(_, _, [], X, Y) :- X > 5, Y > 5.
+
+pieces(State, Player, Pieces, X, Y) :- Y > 5,
+	pieces(State, Player, Pieces, X + 1, 0), !.
+
+pieces(State, Player, Pieces, X, Y) :-
+	Xi is X, Y1 is Y,
+	(get(State, [Xi, Y1], Player) ->
+		Pieces = [[Xi, Y1]|NextPieces]
+	;
+		Pieces = NextPieces
+	),
+	pieces(State, Player, NextPieces, X, Y + 1), !.
+
+fetchCoord([X, Y], Direction, [NewX, NewY]) :-
+(
+	(Direction = north, NewX = X, NewY is Y - 1);
+	(Direction = south, NewX = X, NewY is Y + 1);
+	(Direction = east, NewX is X + 1, NewY = Y);
+	(Direction = west, NewX is X - 1, NewY = Y);
+	(Direction = nWest, NewX is X - 1, NewY is Y - 1);
+	(Direction = nEast, NewX is X + 1, NewY is Y - 1);
+	(Direction = sWest, NewX is X - 1, NewY is Y + 1);
+	(Direction = sEast, NewX is X + 1, NewY is Y + 1)
+).
+
+
+
+flipTiles(State, Player, _, [X, Y], Direction, State) :-
+	fetchCoord([X, Y], Direction, [Xi, Y1]),
+	get(State, [Xi, Y1], Player).
+
+flipTiles(State, Player, Opp, [X, Y], Direction, NewState) :-
+	fetchCoord([X, Y], Direction, [Xi, Y1]),
+	get(State, [Xi, Y1], Tile),
+	Tile = Opp, 
+	flipTiles(State, Player, Opp, [Xi, Y1], Direction, FlippedState),
+	set(FlippedState, NewState, [Xi, Y1], Player).
 
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
 %
 %%%%%%%%%%%%%%nextState(Player,Move,State,NewState,NextPlayer)%%%%%%%%%%%%%%%%%%%%
-%% 
-%% define nextState(Player,Move,State,NewState,NextPlayer). 
-%   - given that Player makes Move in State, it determines NewState (i.e. the next 
+%%
+%% define nextState(Player,Move,State,NewState,NextPlayer).
+%   - given that Player makes Move in State, it determines NewState (i.e. the next
 %     state) and NextPlayer (i.e. the next player who will move).
-%
 
-nextState(Player, Move, State, NewState, NextPlayer):-
-	opponent(Player, NextPlayer).
+nextState(Player, n, State, State, NextPlayer) :- 
+	nextPlayer(State, Player, NextPlayer).
 
-opponent(Player, Opponent):-
-	Opponent is (Player mod 2) + 1.
+nextState(Player, [X, Y], State, NewState, NextPlayer) :-
+	makeMove(State, Player, [X, Y], NewState),
+	nextPlayer(NewState, Player, NextPlayer).
 
+nextPlayer(NewState, Player, NextPlayer) :-
+    Opp is (Player mod 2) + 1,
+    length(NewState, OppMovesLength),
+    OppMovesLength = 0,
+    NextPlayer = Player.
+
+nextPlayer(_, Player, NextPlayer) :-
+    NextPlayer is (Player mod 2) + 1.
 
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
@@ -396,6 +467,3 @@ setInList( [Element|RestList], [Element|NewRestList], Index, Value) :-
 
 todo:-
 	!.
-
-unit_tests:-
-countScore([1,1,1,2,2,2,3,2,0,0,0], Player1, Player2).
