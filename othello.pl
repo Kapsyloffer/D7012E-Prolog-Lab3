@@ -142,8 +142,8 @@ tie(State):-
 terminal(State):-
 	moves(1, State, Player1Moves),
 	moves(2, State, Player2Moves),
-	Player1Moves == [],
-	Player2Moves == [].
+	Player1Moves == [n],
+	Player2Moves == [n].
 
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
@@ -174,113 +174,112 @@ printList([H | L]) :-
 %% define moves(Player,State,MoveList). 
 %   - returns list MoveList of all legal moves Player can make in State
 %
-moves(Player, State,MoveList) :-
-	pieces(State, Player, Pieces),
-	moves(Player, State, Pieces, UnsortedMoveList),
-	(UnsortedMoveList = [] 
-	->
-		MoveList = [n]
-	;
-		sort(UnsortedMoveList,MoveList)
-	).
 
-moves(Player, State, [Coord|Tail],MoveList) :-
+
+moves(Player, State, MoveList) :-
+	pieces(State, Player, Pieces), %Get all pieces
+	moves(Player, State, Pieces, List),
+	%Om listan är tom så har vi n moves.
+	(List = [], MoveList = [n] ; MoveList = List).
+
+%Find a move foreach piece
+moves(Player, State, [CurPiece|Rest], MoveList) :-
 	Opp is (Player mod 2) + 1,
-	moves(Player, State, Tail, NextMoves), !,
-	(findMoves(State, Player, Opp, Coord,Moves) 
-	->
-		append(Moves, NextMoves,MoveList) %Moves
-	;
-		MoveList = NextMoves %No moves
-	). 
+	moves(Player, State, Rest, NextMoves), !,
+	(findMoves(State, Player, Opp, CurPiece, Moves) -> append(Moves, NextMoves, MoveList) ; MoveList = NextMoves). 
 
 
 moves(_, _, [], []).
 
-findMoves(State, Player, Opp, Coord, Moves) :-
-	findMoves(State, Player, Opp, Coord, Moves,
+findMoves(State, Player, Opp, CurPiece, Moves) :-
+	findMoves(State, Player, Opp, CurPiece, Moves,
 	[north, south, east, west, nWest, nEast, sWest, sEast]).
 
-findMoves(State, Player, Opp, Coord,Moves, [Direction|Tail]) :-
-	findMoves(State, Player, Opp, Coord, NextMoves, Tail),
-	(findMove(State, Player, Opp, Coord, Direction, Player,Move) 
-	->
-		Moves = [Move|NextMoves] % Found move, add to list.
+findMoves(State, Player, Opp, CurPiece, Moves, [Direction|Rest]) :-
+	findMoves(State, Player, Opp, CurPiece, NextMoves, Rest),
+	(findMove(State, Player, Opp, CurPiece, Direction, Player, Move) ->
+		append([Move], NextMoves, Moves)
 	;
-		Moves = NextMoves % No move.
-	). 
+		Moves = NextMoves
+	).
 findMoves(_, _, _, _, [], []).
 
-%Here we find each legal move n each direction,
-findMove(State, Player, Opp, [X, Y], Direction, Prev,Move) :-
-	fetchCoord([X, Y], Direction, [Xi, Y1]),
-	get(State, [Xi, Y1], Tile),
+% Hittar ett legal move i en riktining.
+% Börjar med player,
+% Hittar ett led av opponent pieces
+% Då vi stöter på en tom plats så är moved valid.
+findMove(State, Player, Opp, [X, Y], Direction, Prev, Move) :-
+	fetchCoord([X, Y], Direction, [X1, Y1]),
+	get(State, [X1, Y1], Tile),
 	\+(Tile = Player),
 	(
 		Tile = Opp, 
-		findMove(State, Player, Opp, [Xi, Y1], Direction, Opp,Move)
-		
-	;
+		findMove(State, Player, Opp, [X1, Y1], Direction, Opp, Move)
+	; %Om den är tom, och tidigare tilen i riktningen var en opponent, då är [X1, Y1] en valid move.
 		Tile = ., 
 		Prev = Opp,
-		Move = [Xi, Y1]
+		Move = [X1, Y1]
 	).
 
+makeMove(State, _, _, _, [], State).
 makeMove(State, Player, Move, NewState) :-
 	Opp is (Player mod 2) + 1,
 	set(State, S, Move, Player),
 	makeMove(S, Player, Opp, Move,
 	[north, south, east, west, nWest, nEast, sWest, sEast], NewState).
-makeMove(State, Player, Opp, Move, [Direction|Tail], NewState) :-
+
+makeMove(State, Player, Opp, Move, [Direction|Rest], NewState) :-
 	(flipTiles(State, Player, Opp, Move, Direction, FlippedState) ->
-		S = FlippedState % Update state.
+		S = FlippedState 
 	;
-		S = State % Keep old state, none are flipped.
+		S = State 
 	),
-	makeMove(S, Player, Opp, Move, Tail, NewState).
-makeMove(State, _, _, _, [], State).
+	makeMove(S, Player, Opp, Move, Rest, NewState).
 
 
 pieces(State, Player, Pieces) :- pieces(State, Player, Pieces, 0, 0).
 
-pieces(_, _, [], X, Y) :- X > 5, Y > 5.
+pieces(_, _, [], X, Y) :- 
+	X > 5, 
+	Y > 5.
 
-pieces(State, Player, Pieces, X, Y) :- Y > 5,
+pieces(State, Player, Pieces, X, Y) :- 
+	Y > 5,
 	pieces(State, Player, Pieces, X + 1, 0), !.
 
 pieces(State, Player, Pieces, X, Y) :-
-	Xi is X, Y1 is Y,
-	(get(State, [Xi, Y1], Player) ->
-		Pieces = [[Xi, Y1]|NextPieces]
-	;
-		Pieces = NextPieces
-	),
+	X1 is X, Y1 is Y,
+	(get(State, [X1, Y1], Player), Pieces = [[X1, Y1]|NextPieces] ; Pieces = NextPieces),
 	pieces(State, Player, NextPieces, X, Y + 1), !.
 
-fetchCoord([X, Y], Direction, [NewX, NewY]) :-
+
+%En lista som beskriver åt vilket håll varje direction ligger
+fetchCoord([X, Y], Direction, [X1, Y1]) :-
 (
-	(Direction = north, NewX = X, NewY is Y - 1);
-	(Direction = south, NewX = X, NewY is Y + 1);
-	(Direction = east, NewX is X + 1, NewY = Y);
-	(Direction = west, NewX is X - 1, NewY = Y);
-	(Direction = nWest, NewX is X - 1, NewY is Y - 1);
-	(Direction = nEast, NewX is X + 1, NewY is Y - 1);
-	(Direction = sWest, NewX is X - 1, NewY is Y + 1);
-	(Direction = sEast, NewX is X + 1, NewY is Y + 1)
+	(Direction = north, X1 is X, Y1 is Y - 1);
+	(Direction = south, X1 is X, Y1 is Y + 1);
+	(Direction = east, X1 is X + 1, Y1 is Y);
+	(Direction = west, X1 is X - 1, Y1 is Y);
+	(Direction = nWest, X1 is X - 1, Y1 is Y - 1);
+	(Direction = nEast, X1 is X + 1, Y1 is Y - 1);
+	(Direction = sWest, X1 is X - 1, Y1 is Y + 1);
+	(Direction = sEast, X1 is X + 1, Y1 is Y + 1)
 ).
 
 
 
+
+
 flipTiles(State, Player, _, [X, Y], Direction, State) :-
-	fetchCoord([X, Y], Direction, [Xi, Y1]),
-	get(State, [Xi, Y1], Player).
+	fetchCoord([X, Y], Direction, [X1, Y1]),
+	get(State, [X1, Y1], Player).
 
 flipTiles(State, Player, Opp, [X, Y], Direction, NewState) :-
-	fetchCoord([X, Y], Direction, [Xi, Y1]),
-	get(State, [Xi, Y1], Tile),
+	fetchCoord([X, Y], Direction, [X1, Y1]),
+	get(State, [X1, Y1], Tile),
 	Tile = Opp, 
-	flipTiles(State, Player, Opp, [Xi, Y1], Direction, FlippedState),
-	set(FlippedState, NewState, [Xi, Y1], Player).
+	flipTiles(State, Player, Opp, [X1, Y1], Direction, FlippedState),
+	set(FlippedState, NewState, [X1, Y1], Player).
 
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
@@ -292,17 +291,12 @@ flipTiles(State, Player, Opp, [X, Y], Direction, NewState) :-
 %     state) and NextPlayer (i.e. the next player who will move).
 
 nextState(Player, n, State, State, NextPlayer) :- 
+	\+ terminal(State),
 	nextPlayer(State, Player, NextPlayer).
 
 nextState(Player, [X, Y], State, NewState, NextPlayer) :-
 	makeMove(State, Player, [X, Y], NewState),
 	nextPlayer(NewState, Player, NextPlayer).
-
-nextPlayer(NewState, Player, NextPlayer) :-
-    Opp is (Player mod 2) + 1,
-    length(NewState, OppMovesLength),
-    OppMovesLength = 0,
-    NextPlayer = Player.
 
 nextPlayer(_, Player, NextPlayer) :-
     NextPlayer is (Player mod 2) + 1.
@@ -431,7 +425,7 @@ upperBound(101).
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
 %
 % get(Board, Point, Element): get the value of the board at position
-% column X and row Y (indexing starts at 0).
+% column X and row Y (indeX1ng starts at 0).
 % Do not change get:
 
 get( Board, [X, Y], Value) :- 
@@ -441,7 +435,7 @@ get( Board, [X, Y], Value) :-
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
 %
 % set( Board, NewBoard, [X, Y], Value): set the value of the board at position
-% column X and row Y to Value (indexing starts at 0). Returns the new board as
+% column X and row Y to Value (indeX1ng starts at 0). Returns the new board as
 % NewBoard. Do not change set:
 
 set( [Row|RestRows], [NewRow|RestRows], [X, 0], Value) :-
@@ -463,7 +457,3 @@ setInList( [Element|RestList], [Element|NewRestList], Index, Value) :-
 	Index > 0, 
 	Index1 is Index-1, 
 	setInList( RestList, NewRestList, Index1, Value). 
- 
-
-todo:-
-	!.
