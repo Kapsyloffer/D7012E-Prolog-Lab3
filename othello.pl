@@ -10,9 +10,15 @@
 
 
 
-%do not chagne the follwoing line!
+%do not change the follwoing line!
 :- ensure_loaded('play.pl').
 :- ensure_loaded('stupid.pl'). 
+
+%Warning supression.
+:- discontiguous moves/4.
+:- discontiguous findMoves/6.
+:- discontiguous playedMove/6.
+:- discontiguous getPlayerPositions/5.
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
 %
@@ -101,8 +107,8 @@ winner(State, Player):-
 %vi kollar vem som leder.
 compare_scores(State, P1, P2, Player) :-
     (
-		P1 < P2 -> Player = 2 ;
-     	P1 > P2 -> Player = 1 ;
+		P1 > P2 -> Player = 2 ;
+     	P1 < P2 -> Player = 1 ;
 		tie(State) %Om de är lika skickar så vi dem till tie hell.
 	 ), !.
 
